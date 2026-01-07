@@ -77,6 +77,7 @@ macro_rules! bitarr {
 		const DATA: [Mem; ELTS] = [ELEM; ELTS];
 
 		type This = $crate::array::BitArray<[$store; ELTS], $order>;
+		#[allow(clippy::missing_transmute_annotations)]
 		unsafe { core::mem::transmute::<_, This>(DATA) }
 	}};
 	(const $val:expr; $len:expr) => {{

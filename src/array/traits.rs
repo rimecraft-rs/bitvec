@@ -1,22 +1,11 @@
 //! Additional trait implementations on bit-arrays.
 
 use core::{
-	borrow::{
-		Borrow,
-		BorrowMut,
-	},
+	borrow::{Borrow, BorrowMut},
 	cmp,
 	convert::TryFrom,
-	fmt::{
-		self,
-		Debug,
-		Display,
-		Formatter,
-	},
-	hash::{
-		Hash,
-		Hasher,
-	},
+	fmt::{self, Debug, Display, Formatter},
+	hash::{Hash, Hasher},
 	marker::Unpin,
 };
 
@@ -24,11 +13,7 @@ use tap::TryConv;
 
 use super::BitArray;
 use crate::{
-	index::BitIdx,
-	mem,
-	order::BitOrder,
-	slice::BitSlice,
-	store::BitStore,
+	index::BitIdx, mem, order::BitOrder, slice::BitSlice, store::BitStore,
 	view::BitViewSized,
 };
 
@@ -192,7 +177,7 @@ where
 
 	#[inline]
 	fn try_from(src: &BitSlice<A::Store, O>) -> Result<Self, Self::Error> {
-		src.try_conv::<&Self>().map(|this| this.clone())
+		src.try_conv::<&Self>().cloned()
 	}
 }
 
@@ -275,7 +260,9 @@ where
 {
 	#[inline]
 	fn hash<H>(&self, hasher: &mut H)
-	where H: Hasher {
+	where
+		H: Hasher,
+	{
 		self.as_bitslice().hash(hasher);
 	}
 }
@@ -352,7 +339,7 @@ enum InnerError {
 	/// A bit-slice did not match the length of the destination bit-array.
 	UnequalLen {
 		/// The length of the bit-slice that produced this error.
-		actual:   usize,
+		actual: usize,
 		/// The length of the destination bit-array type.
 		expected: usize,
 	},

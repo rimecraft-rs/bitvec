@@ -6,23 +6,16 @@ iteration, as element load/stores are faster than reading and writing each bit
 in an element individually.
 !*/
 
-#![feature(maybe_uninit_uninit_array, maybe_uninit_slice)]
+#![feature(maybe_uninit_slice)]
 
 use std::mem::MaybeUninit;
 
 use bitvec::{
-	mem::{
-		bits_of,
-		elts,
-	},
+	mem::{bits_of, elts},
 	prelude::*,
 };
 use criterion::{
-	criterion_group,
-	criterion_main,
-	BenchmarkId,
-	Criterion,
-	SamplingMode,
+	criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode,
 	Throughput,
 };
 use tap::Tap;
@@ -40,10 +33,12 @@ const MAX_BITS: usize = 64 * FACTOR * 8;
 
 fn make_slots<T, const LEN: usize>(
 ) -> ([MaybeUninit<T>; LEN], [MaybeUninit<T>; LEN])
-where T: BitStore {
+where
+	T: BitStore,
+{
 	(
-		MaybeUninit::<T>::uninit_array::<LEN>(),
-		MaybeUninit::<T>::uninit_array::<LEN>(),
+		[const { MaybeUninit::<T>::uninit() }; LEN],
+		[const { MaybeUninit::<T>::uninit() }; LEN],
 	)
 }
 
@@ -54,12 +49,7 @@ fn view_slots<'a, 'b, T>(
 where
 	T: BitStore,
 {
-	unsafe {
-		(
-			MaybeUninit::slice_assume_init_ref(src),
-			MaybeUninit::slice_assume_init_mut(dst),
-		)
-	}
+	unsafe { (src.assume_init_ref(), dst.assume_init_mut()) }
 }
 
 pub fn benchmarks(crit: &mut Criterion) {
@@ -98,9 +88,9 @@ pub fn benchmarks(crit: &mut Criterion) {
 		let bytes = bits / bits_of::<u8>();
 
 		let (src_words, dst_words) =
-			(&src_words[.. words], &mut dst_words[.. words]);
+			(&src_words[..words], &mut dst_words[..words]);
 		let (src_bytes, dst_bytes) =
-			(&src_bytes[.. bytes], &mut dst_bytes[.. bytes]);
+			(&src_bytes[..bytes], &mut dst_bytes[..bytes]);
 
 		//  Use the builtin memcpy to run the slices in bulk. This ought to be a
 		//  lower bound on execution time.
@@ -140,9 +130,9 @@ pub fn benchmarks(crit: &mut Criterion) {
 		let bytes = bits / bits_of::<u8>();
 
 		let (src_words, dst_words) =
-			(&src_words[.. words], &mut dst_words[.. words]);
+			(&src_words[..words], &mut dst_words[..words]);
 		let (src_bytes, dst_bytes) =
-			(&src_bytes[.. bytes], &mut dst_bytes[.. bytes]);
+			(&src_bytes[..bytes], &mut dst_bytes[..bytes]);
 
 		//  Ideal bitwise memcpy: no edges, same typarams, fully aligned.
 
@@ -167,8 +157,8 @@ pub fn benchmarks(crit: &mut Criterion) {
 			let src = src_words.view_bits::<Lsb0>();
 			let len = src.len();
 			let (src, dst) = (
-				&src[10 .. len - 10],
-				&mut dst_words.view_bits_mut::<Lsb0>()[10 .. len - 10],
+				&src[10..len - 10],
+				&mut dst_words.view_bits_mut::<Lsb0>()[10..len - 10],
 			);
 			b.iter(|| dst.copy_from_bitslice(src));
 		});
@@ -176,8 +166,8 @@ pub fn benchmarks(crit: &mut Criterion) {
 			let src = src_bytes.view_bits::<Lsb0>();
 			let len = src.len();
 			let (src, dst) = (
-				&src[10 .. len - 10],
-				&mut dst_bytes.view_bits_mut::<Lsb0>()[10 .. len - 10],
+				&src[10..len - 10],
+				&mut dst_bytes.view_bits_mut::<Lsb0>()[10..len - 10],
 			);
 			b.iter(|| dst.copy_from_bitslice(src));
 		});
@@ -185,13 +175,13 @@ pub fn benchmarks(crit: &mut Criterion) {
 		//  Same typarams, misaligned.
 
 		group.bench_function(id("bits_words_misalign"), |b| {
-			let src = &src_words.view_bits::<Lsb0>()[10 ..];
-			let dst = &mut dst_words.view_bits_mut::<Lsb0>()[.. src.len()];
+			let src = &src_words.view_bits::<Lsb0>()[10..];
+			let dst = &mut dst_words.view_bits_mut::<Lsb0>()[..src.len()];
 			b.iter(|| dst.copy_from_bitslice(src));
 		});
 		group.bench_function(id("bits_bytes_misalign"), |b| {
-			let src = &src_bytes.view_bits::<Lsb0>()[10 ..];
-			let dst = &mut dst_bytes.view_bits_mut::<Lsb0>()[.. src.len()];
+			let src = &src_bytes.view_bits::<Lsb0>()[10..];
+			let dst = &mut dst_bytes.view_bits_mut::<Lsb0>()[..src.len()];
 			b.iter(|| dst.copy_from_bitslice(src));
 		});
 	}
@@ -204,9 +194,9 @@ pub fn benchmarks(crit: &mut Criterion) {
 		let bytes = bits / bits_of::<u8>();
 
 		let (src_words, dst_words) =
-			(&src_words[.. words], &mut dst_words[.. words]);
+			(&src_words[..words], &mut dst_words[..words]);
 		let (src_bytes, dst_bytes) =
-			(&src_bytes[.. bytes], &mut dst_bytes[.. bytes]);
+			(&src_bytes[..bytes], &mut dst_bytes[..bytes]);
 
 		//  Mismatched type parameters
 

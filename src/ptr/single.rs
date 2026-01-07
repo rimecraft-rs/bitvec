@@ -1,47 +1,22 @@
 #![doc = include_str!("../../doc/ptr/single.md")]
 
 use core::{
-	any,
-	cmp,
+	any, cmp,
 	convert::TryFrom,
-	fmt::{
-		self,
-		Debug,
-		Display,
-		Formatter,
-		Pointer,
-	},
-	hash::{
-		Hash,
-		Hasher,
-	},
+	fmt::{self, Debug, Display, Formatter, Pointer},
+	hash::{Hash, Hasher},
 	marker::PhantomData,
 	ptr,
 };
 
-use tap::{
-	Pipe,
-	TryConv,
-};
+use tap::{Pipe, TryConv};
 use wyz::{
-	comu::{
-		Address,
-		Const,
-		Frozen,
-		Mut,
-		Mutability,
-		NullPtrError,
-	},
+	comu::{Address, Const, Frozen, Mut, Mutability, NullPtrError},
 	fmt::FmtForward,
 };
 
 use super::{
-	check_alignment,
-	AddressExt,
-	BitPtrRange,
-	BitRef,
-	BitSpan,
-	BitSpanError,
+	check_alignment, AddressExt, BitPtrRange, BitRef, BitSpan, BitSpanError,
 	MisalignError,
 };
 use crate::{
@@ -49,10 +24,7 @@ use crate::{
 	devel as dvl,
 	index::BitIdx,
 	mem,
-	order::{
-		BitOrder,
-		Lsb0,
-	},
+	order::{BitOrder, Lsb0},
 	store::BitStore,
 };
 
@@ -166,8 +138,7 @@ where
 	) -> Self {
 		if cfg!(debug_assertions) {
 			Self::new(ptr, bit).unwrap()
-		}
-		else {
+		} else {
 			Self {
 				ptr,
 				bit,
@@ -258,7 +229,7 @@ where
 	/// It is unsound to *even construct* a pointer that departs the provenance
 	/// region, even if that pointer is never dereferenced!
 	pub(crate) unsafe fn range(self, count: usize) -> BitPtrRange<M, T, O> {
-		(self .. self.add(count)).into()
+		(self..self.add(count)).into()
 	}
 
 	/// Removes write permissions from a bit-pointer.
@@ -429,7 +400,9 @@ where
 	/// [`pointer::cast`](https://doc.rust-lang.org/std/primitive.pointer.html#method.cast)
 	#[inline]
 	pub fn cast<U>(self) -> BitPtr<M, U, O>
-	where U: BitStore {
+	where
+		U: BitStore,
+	{
 		let (addr, head, _) =
 			unsafe { self.span_unchecked(1) }.cast::<U>().raw_parts();
 		unsafe { BitPtr::new_unchecked(addr, head) }
@@ -680,7 +653,9 @@ where
 	/// [`.offset()`]: Self::offset
 	#[inline]
 	pub unsafe fn offset_from<U>(self, origin: BitPtr<M, U, O>) -> isize
-	where U: BitStore<Mem = T::Mem> {
+	where
+		U: BitStore<Mem = T::Mem>,
+	{
 		self.get_addr()
 			.cast::<T::Mem>()
 			.offset_from(origin.get_addr().cast::<T::Mem>())
@@ -1206,6 +1181,7 @@ where
 }
 
 #[cfg(not(tarpaulin_include))]
+#[allow(clippy::non_canonical_clone_impl)]
 impl<M, T, O> Clone for BitPtr<M, T, O>
 where
 	M: Mutability,
@@ -1256,9 +1232,10 @@ where
 		if !dvl::match_store::<T1::Mem, T2::Mem>() {
 			return false;
 		}
-		self.get_addr().to_const() as usize
-			== other.get_addr().to_const() as usize
-			&& self.bit.into_inner() == other.bit.into_inner()
+		std::ptr::addr_eq(
+			self.get_addr().to_const(),
+			other.get_addr().to_const(),
+		) && self.bit.into_inner() == other.bit.into_inner()
 	}
 }
 
@@ -1383,7 +1360,9 @@ where
 {
 	#[inline]
 	fn hash<H>(&self, state: &mut H)
-	where H: Hasher {
+	where
+		H: Hasher,
+	{
 		self.get_addr().hash(state);
 		self.bit.hash(state);
 	}
@@ -1400,7 +1379,8 @@ where
 /// Errors produced by invalid bit-pointer components.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum BitPtrError<T>
-where T: BitStore
+where
+	T: BitStore,
 {
 	/// Attempted to construct a bit-pointer with the null element address.
 	Null(NullPtrError),
@@ -1411,7 +1391,8 @@ where T: BitStore
 
 #[cfg(not(tarpaulin_include))]
 impl<T> From<MisalignError<T>> for BitPtrError<T>
-where T: BitStore
+where
+	T: BitStore,
 {
 	#[inline]
 	fn from(err: MisalignError<T>) -> Self {
@@ -1421,7 +1402,8 @@ where T: BitStore
 
 #[cfg(not(tarpaulin_include))]
 impl<T> From<NullPtrError> for BitPtrError<T>
-where T: BitStore
+where
+	T: BitStore,
 {
 	#[inline]
 	fn from(err: NullPtrError) -> Self {
@@ -1431,7 +1413,8 @@ where T: BitStore
 
 #[cfg(not(tarpaulin_include))]
 impl<T> Display for BitPtrError<T>
-where T: BitStore
+where
+	T: BitStore,
 {
 	#[inline]
 	fn fmt(&self, fmt: &mut Formatter) -> fmt::Result {

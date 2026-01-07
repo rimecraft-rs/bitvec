@@ -2,41 +2,17 @@
 
 use core::{
 	any,
-	convert::{
-		TryFrom,
-		TryInto,
-	},
-	fmt::{
-		self,
-		Binary,
-		Debug,
-		Display,
-		Formatter,
-		LowerHex,
-		Octal,
-		UpperHex,
-	},
-	hash::{
-		Hash,
-		Hasher,
-	},
+	convert::{TryFrom, TryInto},
+	fmt::{self, Binary, Debug, Display, Formatter, LowerHex, Octal, UpperHex},
+	hash::{Hash, Hasher},
 	iter::FusedIterator,
 	marker::PhantomData,
 };
 
-use tap::{
-	Conv,
-	Pipe,
-	Tap,
-};
+use tap::{Conv, Pipe, Tap};
 use wyz::{
 	comu::{
-		Address,
-		Const,
-		Mut,
-		Mutability,
-		Reference,
-		Referential,
+		Address, Const, Mut, Mutability, Reference, Referential,
 		SliceReferential,
 	},
 	fmt::FmtForward,
@@ -44,15 +20,8 @@ use wyz::{
 
 use crate::{
 	access::BitAccess,
-	index::{
-		BitEnd,
-		BitIdx,
-		BitMask,
-	},
-	order::{
-		BitOrder,
-		Lsb0,
-	},
+	index::{BitEnd, BitIdx, BitMask},
+	order::{BitOrder, Lsb0},
 	ptr::BitSpan,
 	slice::BitSlice,
 	store::BitStore,
@@ -376,7 +345,9 @@ where
 	///
 	/// A `Domain` description of the raw memory governed by `bits`.
 	pub(crate) fn new(bits: Reference<'a, M, BitSlice<T, O>>) -> Self
-	where BitSpan<M, T, O>: From<Reference<'a, M, BitSlice<T, O>>> {
+	where
+		BitSpan<M, T, O>: From<Reference<'a, M, BitSlice<T, O>>>,
+	{
 		let bitspan = bits.conv::<BitSpan<M, T, O>>();
 		let (head, elts, tail) =
 			(bitspan.head(), bitspan.elements(), bitspan.tail());
@@ -793,7 +764,9 @@ where
 	/// Converts the partial element into a bit-slice over its governed bits.
 	#[inline]
 	pub fn into_bitslice(self) -> Reference<'a, M, BitSlice<T, O>>
-	where Address<M, BitSlice<T, O>>: Referential<'a> {
+	where
+		Address<M, BitSlice<T, O>>: Referential<'a>,
+	{
 		unsafe {
 			BitSpan::new_unchecked(
 				self.elem,
@@ -936,7 +909,9 @@ where
 {
 	#[inline]
 	fn hash<H>(&self, hasher: &mut H)
-	where H: Hasher {
+	where
+		H: Hasher,
+	{
 		self.load_value().hash(hasher);
 		self.mask.hash(hasher);
 		self.head.hash(hasher);
@@ -969,27 +944,27 @@ mod tests {
 		assert!(head.is_empty());
 		assert!(tail.is_empty());
 
-		let bd = data[2 ..].bit_domain();
+		let bd = data[2..].bit_domain();
 		let (head, body, tail) = bd.region().unwrap();
-		assert_eq!(head, &data[2 .. 32]);
-		assert_eq!(body, &data[32 ..]);
+		assert_eq!(head, &data[2..32]);
+		assert_eq!(body, &data[32..]);
 		assert!(tail.is_empty());
 
-		let bd = data[.. 94].bit_domain();
+		let bd = data[..94].bit_domain();
 		let (head, body, tail) = bd.region().unwrap();
 		assert!(head.is_empty());
-		assert_eq!(body, &data[.. 64]);
-		assert_eq!(tail, &data[64 .. 94]);
+		assert_eq!(body, &data[..64]);
+		assert_eq!(tail, &data[64..94]);
 
-		let bd = data[2 .. 94].bit_domain();
+		let bd = data[2..94].bit_domain();
 		let (head, body, tail) = bd.region().unwrap();
-		assert_eq!(head, &data[2 .. 32]);
-		assert_eq!(body, &data[32 .. 64]);
-		assert_eq!(tail, &data[64 .. 94]);
+		assert_eq!(head, &data[2..32]);
+		assert_eq!(body, &data[32..64]);
+		assert_eq!(tail, &data[64..94]);
 
-		let bd = data[34 .. 62].bit_domain();
+		let bd = data[34..62].bit_domain();
 		assert!(bd.region().is_none());
-		assert_eq!(bd.enclave().unwrap(), data[34 .. 62]);
+		assert_eq!(bd.enclave().unwrap(), data[34..62]);
 
 		let (head, body, tail) =
 			BitDomain::<Const, usize, Lsb0>::default().region().unwrap();
@@ -1010,36 +985,39 @@ mod tests {
 		assert!(tail.is_none());
 		assert_eq!(body, data);
 
-		let d = bits[2 ..].domain();
+		let d = bits[2..].domain();
 		let (head, body, tail) = d.region().unwrap();
 		assert_eq!(head.unwrap().load_value(), (data[0] << 2) >> 2);
-		assert_eq!(body, &data[1 ..]);
+		assert_eq!(body, &data[1..]);
 		assert!(tail.is_none());
 
-		let d = bits[.. 94].domain();
+		let d = bits[..94].domain();
 		let (head, body, tail) = d.region().unwrap();
 		assert!(head.is_none());
-		assert_eq!(body, &data[.. 2]);
+		assert_eq!(body, &data[..2]);
 		assert_eq!(tail.unwrap().load_value(), (data[2] >> 2) << 2);
 
-		let d = bits[2 .. 94].domain();
+		let d = bits[2..94].domain();
 		let (head, body, tail) = d.region().unwrap();
 		assert_eq!(head.unwrap().load_value(), (data[0] << 2) >> 2);
-		assert_eq!(body, &data[1 .. 2]);
+		assert_eq!(body, &data[1..2]);
 		assert_eq!(tail.unwrap().load_value(), (data[2] >> 2) << 2);
 
-		let d = bits[34 .. 62].domain();
+		let d = bits[34..62].domain();
 		assert!(d.region().is_none());
 		assert_eq!(
 			d.enclave().unwrap().load_value(),
 			((data[1] << 2) >> 4) << 2,
 		);
 
-		assert!(matches!(bits![].domain(), Domain::Region {
-			head: None,
-			body: &[],
-			tail: None,
-		}));
+		assert!(matches!(
+			bits![].domain(),
+			Domain::Region {
+				head: None,
+				body: &[],
+				tail: None,
+			}
+		));
 
 		assert!(matches!(
 			Domain::<Const, usize, Lsb0>::default(),
@@ -1051,16 +1029,15 @@ mod tests {
 		));
 
 		let data = core::cell::Cell::new(0u8);
-		let partial =
-			data.view_bits::<Lsb0>()[2 .. 6].domain().enclave().unwrap();
+		let partial = data.view_bits::<Lsb0>()[2..6].domain().enclave().unwrap();
 		assert_eq!(partial.store_value_aliased(!0), 0);
-		assert_eq!(data.get(), 0b00_1111_00);
+		assert_eq!(data.get(), 0b0011_1100);
 	}
 
 	#[test]
 	fn iter() {
 		let bits = [0x12u8, 0x34, 0x56].view_bits::<Lsb0>();
-		let mut domain = bits[4 .. 12].domain();
+		let mut domain = bits[4..12].domain();
 		assert_eq!(domain.len(), 2);
 		assert_eq!(domain.next().unwrap(), 0x10);
 		assert_eq!(domain.next_back().unwrap(), 0x04);
@@ -1068,10 +1045,10 @@ mod tests {
 		assert!(domain.next().is_none());
 		assert!(domain.next_back().is_none());
 
-		assert_eq!(bits[2 .. 6].domain().len(), 1);
-		assert_eq!(bits[18 .. 22].domain().next_back().unwrap(), 0b00_0101_00);
+		assert_eq!(bits[2..6].domain().len(), 1);
+		assert_eq!(bits[18..22].domain().next_back().unwrap(), 0b0001_0100);
 
-		let mut domain = bits[4 .. 20].domain();
+		let mut domain = bits[4..20].domain();
 		assert_eq!(domain.next_back().unwrap(), 0x06);
 		assert_eq!(domain.next_back().unwrap(), 0x34);
 		assert_eq!(domain.next_back().unwrap(), 0x10);
@@ -1096,11 +1073,11 @@ mod tests {
 		);
 		assert_eq!(render, expected);
 
-		let render = format!("{:?}", data[2 .. 30].bit_domain());
+		let render = format!("{:?}", data[2..30].bit_domain());
 		let expected = format!(
 			"BitDomain::<*const u32, {}>::Enclave({:?})",
 			any::type_name::<Msb0>(),
-			&data[2 .. 30],
+			&data[2..30],
 		);
 		assert_eq!(render, expected);
 
@@ -1113,17 +1090,15 @@ mod tests {
 		);
 		assert_eq!(render, expected);
 
-		let render = format!("{:?}", data[2 .. 30].domain());
+		let render = format!("{:?}", data[2..30].domain());
 		let expected = format!(
 			"Domain::<*const u32, {}>::Enclave",
 			any::type_name::<Msb0>(),
 		);
 		assert!(render.starts_with(&expected));
 
-		let partial = 0x3Cu8.view_bits::<Lsb0>()[2 .. 6]
-			.domain()
-			.enclave()
-			.unwrap();
+		let partial =
+			0x3Cu8.view_bits::<Lsb0>()[2..6].domain().enclave().unwrap();
 		let render = format!("{:?}", partial);
 		assert_eq!(
 			render,

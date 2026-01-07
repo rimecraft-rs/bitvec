@@ -14,6 +14,14 @@
 	clippy::type_complexity,
 	unknown_lints
 )]
+// modern compatibility
+#![allow(
+	rust_2024_compatibility,
+	clippy::implied_bounds_in_impls,
+	clippy::doc_lazy_continuation,
+	clippy::missing_safety_doc,
+	clippy::needless_lifetimes
+)]
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
@@ -43,35 +51,15 @@ pub mod view;
 pub mod prelude {
 	pub use crate::{
 		array::BitArray,
-		bitarr,
-		bits,
+		bitarr, bits,
 		field::BitField as _,
-		order::{
-			BitOrder,
-			LocalBits,
-			Lsb0,
-			Msb0,
-		},
-		ptr::{
-			BitPtr,
-			BitPtrRange,
-			BitRef,
-		},
+		order::{BitOrder, LocalBits, Lsb0, Msb0},
+		ptr::{BitPtr, BitPtrRange, BitRef},
 		slice::BitSlice,
 		store::BitStore,
-		view::{
-			AsBits,
-			AsMutBits,
-			BitView as _,
-			BitViewSized as _,
-		},
+		view::{AsBits, AsMutBits, BitView as _, BitViewSized as _},
 		BitArr,
 	};
 	#[cfg(feature = "alloc")]
-	pub use crate::{
-		bitbox,
-		bitvec,
-		boxed::BitBox,
-		vec::BitVec,
-	};
+	pub use crate::{bitbox, bitvec, boxed::BitBox, vec::BitVec};
 }

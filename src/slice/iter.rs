@@ -2,38 +2,18 @@
 
 use core::{
 	cmp,
-	fmt::{
-		self,
-		Debug,
-		Formatter,
-	},
-	iter::{
-		FusedIterator,
-		Map,
-	},
+	fmt::{self, Debug, Formatter},
+	iter::{FusedIterator, Map},
 	marker::PhantomData,
 	mem,
 };
 
-use wyz::comu::{
-	Const,
-	Mut,
-};
+use wyz::comu::{Const, Mut};
 
-use super::{
-	BitSlice,
-	BitSliceIndex,
-};
+use super::{BitSlice, BitSliceIndex};
 use crate::{
-	order::{
-		BitOrder,
-		Lsb0,
-		Msb0,
-	},
-	ptr::{
-		BitPtrRange,
-		BitRef,
-	},
+	order::{BitOrder, Lsb0, Msb0},
+	ptr::{BitPtrRange, BitRef},
 	store::BitStore,
 };
 
@@ -83,7 +63,7 @@ where
 	/// faster performance when iterating.
 	range: BitPtrRange<Const, T, O>,
 	/// `Iter` is semantically equivalent to a `&BitSlice`.
-	_ref:  PhantomData<&'a BitSlice<T, O>>,
+	_ref: PhantomData<&'a BitSlice<T, O>>,
 }
 
 impl<'a, T, O> Iter<'a, T, O>
@@ -95,7 +75,7 @@ where
 	pub(super) fn new(slice: &'a BitSlice<T, O>) -> Self {
 		Self {
 			range: slice.as_bitptr_range(),
-			_ref:  PhantomData,
+			_ref: PhantomData,
 		}
 	}
 
@@ -282,7 +262,7 @@ where
 	/// faster performance when iterating.
 	range: BitPtrRange<Mut, T::Alias, O>,
 	/// `IterMut` is semantically equivalent to an aliased `&mut BitSlice`.
-	_ref:  PhantomData<&'a mut BitSlice<T::Alias, O>>,
+	_ref: PhantomData<&'a mut BitSlice<T::Alias, O>>,
 }
 
 impl<'a, T, O> IterMut<'a, T, O>
@@ -294,7 +274,7 @@ where
 	pub(super) fn new(slice: &'a mut BitSlice<T, O>) -> Self {
 		Self {
 			range: slice.alias_mut().as_mut_bitptr_range(),
-			_ref:  PhantomData,
+			_ref: PhantomData,
 		}
 	}
 
@@ -1495,6 +1475,7 @@ macro_rules! new_group {
 		{
 			#[inline]
 			#[allow(missing_docs, clippy::missing_docs_in_private_items)]
+			#[allow(clippy::redundant_locals)]
 			pub(super) fn new(
 				slice: &'a $($m)? BitSlice<T, O>,
 				width: usize,
@@ -1625,9 +1606,9 @@ where
 	/// [`BitSlice`]: crate::slice::BitSlice
 	slice: &'a BitSlice<T, O>,
 	/// The function used to test whether a split should occur.
-	pred:  P,
+	pred: P,
 	/// Whether the split is finished.
-	done:  bool,
+	done: bool,
 }
 
 split!(Split => &'a BitSlice<T, O> {
@@ -1680,9 +1661,9 @@ where
 	/// The source bit-slice, marked with the alias tainting.
 	slice: &'a mut BitSlice<T::Alias, O>,
 	/// The function that tests each bit for whether it is a split point.
-	pred:  P,
+	pred: P,
 	/// Marks whether iteration has concluded, without emptying the `slice`.
-	done:  bool,
+	done: bool,
 }
 
 split!(SplitMut => &'a mut BitSlice<T::Alias, O> {
@@ -1746,9 +1727,9 @@ where
 	/// The source bit-slice.
 	slice: &'a BitSlice<T, O>,
 	/// The function that tests each bit for whether it is a split point.
-	pred:  P,
+	pred: P,
 	/// Marks whether iteration has concluded, without emptying the `slice`.
-	done:  bool,
+	done: bool,
 }
 
 split!(SplitInclusive => &'a BitSlice<T, O> {
@@ -1807,9 +1788,9 @@ where
 	/// The source bit-slice, marked with the alias tainting.
 	slice: &'a mut BitSlice<T::Alias, O>,
 	/// The function that tests each bit for whether it is a split point.
-	pred:  P,
+	pred: P,
 	/// Marks whether iteration has concluded, without emptying the `slice`.
-	done:  bool,
+	done: bool,
 }
 
 split!(SplitInclusiveMut => &'a mut BitSlice<T::Alias, O> {
@@ -1876,9 +1857,9 @@ where
 	/// The source bit-slice.
 	slice: &'a BitSlice<T, O>,
 	/// The function that tests each bit for whether it is a split point.
-	pred:  P,
+	pred: P,
 	/// Marks whether iteration has concluded, without emptying the `slice`.
-	done:  bool,
+	done: bool,
 }
 
 split!(RSplit => &'a BitSlice<T, O> {
@@ -1919,9 +1900,9 @@ where
 	/// The source bit-slice, marked with the alias tainting.
 	slice: &'a mut BitSlice<T::Alias, O>,
 	/// The function that tests each bit for whether it is a split point.
-	pred:  P,
+	pred: P,
 	/// Marks whether iteration has concluded, without emptying the `slice`.
-	done:  bool,
+	done: bool,
 }
 
 split!(RSplitMut => &'a mut BitSlice<T::Alias, O> {
@@ -2158,11 +2139,9 @@ where
 	fn next(&mut self) -> Option<Self::Item> {
 		let pos = if let Some(bits) = self.inner.coerce::<T, Lsb0>() {
 			bits.sp_first_one()
-		}
-		else if let Some(bits) = self.inner.coerce::<T, Msb0>() {
+		} else if let Some(bits) = self.inner.coerce::<T, Msb0>() {
 			bits.sp_first_one()
-		}
-		else {
+		} else {
 			self.inner.iter().by_vals().position(|b| b)
 		};
 
@@ -2194,11 +2173,9 @@ where
 	fn next_back(&mut self) -> Option<Self::Item> {
 		let pos = if let Some(bits) = self.inner.coerce::<T, Lsb0>() {
 			bits.sp_last_one()
-		}
-		else if let Some(bits) = self.inner.coerce::<T, Msb0>() {
+		} else if let Some(bits) = self.inner.coerce::<T, Msb0>() {
 			bits.sp_last_one()
-		}
-		else {
+		} else {
 			self.inner.iter().by_vals().rposition(|b| b)
 		};
 
@@ -2289,11 +2266,9 @@ where
 	fn next(&mut self) -> Option<Self::Item> {
 		let pos = if let Some(bits) = self.inner.coerce::<T, Lsb0>() {
 			bits.sp_first_zero()
-		}
-		else if let Some(bits) = self.inner.coerce::<T, Msb0>() {
+		} else if let Some(bits) = self.inner.coerce::<T, Msb0>() {
 			bits.sp_first_zero()
-		}
-		else {
+		} else {
 			self.inner.iter().by_vals().position(|b| !b)
 		};
 
@@ -2322,11 +2297,9 @@ where
 	fn next_back(&mut self) -> Option<Self::Item> {
 		let pos = if let Some(bits) = self.inner.coerce::<T, Lsb0>() {
 			bits.sp_last_zero()
-		}
-		else if let Some(bits) = self.inner.coerce::<T, Msb0>() {
+		} else if let Some(bits) = self.inner.coerce::<T, Msb0>() {
 			bits.sp_last_zero()
-		}
-		else {
+		} else {
 			self.inner.iter().by_vals().rposition(|b| !b)
 		};
 

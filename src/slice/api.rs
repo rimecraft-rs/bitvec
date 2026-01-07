@@ -3,63 +3,29 @@
 use core::{
 	cmp,
 	ops::{
-		Range,
-		RangeFrom,
-		RangeFull,
-		RangeInclusive,
-		RangeTo,
-		RangeToInclusive,
+		Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
 	},
 };
 
 use wyz::{
-	comu::{
-		Const,
-		Mut,
-	},
+	comu::{Const, Mut},
 	range::RangeExt,
 };
 
 use super::{
-	BitSlice,
-	Chunks,
-	ChunksExact,
-	ChunksExactMut,
-	ChunksMut,
-	Iter,
-	IterMut,
-	RChunks,
-	RChunksExact,
-	RChunksExactMut,
-	RChunksMut,
-	RSplit,
-	RSplitMut,
-	RSplitN,
-	RSplitNMut,
-	Split,
-	SplitInclusive,
-	SplitInclusiveMut,
-	SplitMut,
-	SplitN,
-	SplitNMut,
-	Windows,
+	BitSlice, Chunks, ChunksExact, ChunksExactMut, ChunksMut, Iter, IterMut,
+	RChunks, RChunksExact, RChunksExactMut, RChunksMut, RSplit, RSplitMut,
+	RSplitN, RSplitNMut, Split, SplitInclusive, SplitInclusiveMut, SplitMut,
+	SplitN, SplitNMut, Windows,
 };
 #[cfg(feature = "alloc")]
 use crate::vec::BitVec;
 use crate::{
 	array::BitArray,
 	domain::Domain,
-	mem::{
-		self,
-		BitRegister,
-	},
+	mem::{self, BitRegister},
 	order::BitOrder,
-	ptr::{
-		BitPtr,
-		BitRef,
-		BitSpan,
-		BitSpanError,
-	},
+	ptr::{BitPtr, BitRef, BitSpan, BitSpanError},
 	store::BitStore,
 };
 
@@ -130,7 +96,7 @@ where
 	/// assert!(bits![].first().is_none());
 	/// ```
 	#[inline]
-	pub fn first(&self) -> Option<BitRef<Const, T, O>> {
+	pub fn first(&self) -> Option<BitRef<'_, Const, T, O>> {
 		self.get(0)
 	}
 
@@ -161,7 +127,7 @@ where
 	/// assert!(bits![mut].first_mut().is_none());
 	/// ```
 	#[inline]
-	pub fn first_mut(&mut self) -> Option<BitRef<Mut, T, O>> {
+	pub fn first_mut(&mut self) -> Option<BitRef<'_, Mut, T, O>> {
 		self.get_mut(0)
 	}
 
@@ -188,7 +154,7 @@ where
 	/// assert_eq!(rest, bits![0; 2]);
 	/// ```
 	#[inline]
-	pub fn split_first(&self) -> Option<(BitRef<Const, T, O>, &Self)> {
+	pub fn split_first(&self) -> Option<(BitRef<'_, Const, T, O>, &Self)> {
 		match self.len() {
 			0 => None,
 			_ => unsafe {
@@ -226,7 +192,7 @@ where
 	#[inline]
 	pub fn split_first_mut(
 		&mut self,
-	) -> Option<(BitRef<Mut, T::Alias, O>, &mut BitSlice<T::Alias, O>)> {
+	) -> Option<(BitRef<'_, Mut, T::Alias, O>, &mut BitSlice<T::Alias, O>)> {
 		match self.len() {
 			0 => None,
 			_ => unsafe {
@@ -259,7 +225,7 @@ where
 	/// assert_eq!(rest, bits![0; 2]);
 	/// ```
 	#[inline]
-	pub fn split_last(&self) -> Option<(BitRef<Const, T, O>, &Self)> {
+	pub fn split_last(&self) -> Option<(BitRef<'_, Const, T, O>, &Self)> {
 		match self.len() {
 			0 => None,
 			n => unsafe {
@@ -297,7 +263,7 @@ where
 	#[inline]
 	pub fn split_last_mut(
 		&mut self,
-	) -> Option<(BitRef<Mut, T::Alias, O>, &mut BitSlice<T::Alias, O>)> {
+	) -> Option<(BitRef<'_, Mut, T::Alias, O>, &mut BitSlice<T::Alias, O>)> {
 		match self.len() {
 			0 => None,
 			n => unsafe {
@@ -330,7 +296,7 @@ where
 	/// assert!(bits![].last().is_none());
 	/// ```
 	#[inline]
-	pub fn last(&self) -> Option<BitRef<Const, T, O>> {
+	pub fn last(&self) -> Option<BitRef<'_, Const, T, O>> {
 		match self.len() {
 			0 => None,
 			n => Some(unsafe { self.get_unchecked(n - 1) }),
@@ -364,7 +330,7 @@ where
 	/// assert!(bits![mut].last_mut().is_none());
 	/// ```
 	#[inline]
-	pub fn last_mut(&mut self) -> Option<BitRef<Mut, T, O>> {
+	pub fn last_mut(&mut self) -> Option<BitRef<'_, Mut, T, O>> {
 		match self.len() {
 			0 => None,
 			n => Some(unsafe { self.get_unchecked_mut(n - 1) }),
@@ -402,7 +368,9 @@ where
 	/// ```
 	#[inline]
 	pub fn get<'a, I>(&'a self, index: I) -> Option<I::Immut>
-	where I: BitSliceIndex<'a, T, O> {
+	where
+		I: BitSliceIndex<'a, T, O>,
+	{
 		index.get(self)
 	}
 
@@ -437,7 +405,9 @@ where
 	/// ```
 	#[inline]
 	pub fn get_mut<'a, I>(&'a mut self, index: I) -> Option<I::Mut>
-	where I: BitSliceIndex<'a, T, O> {
+	where
+		I: BitSliceIndex<'a, T, O>,
+	{
 		index.get_mut(self)
 	}
 
@@ -478,7 +448,9 @@ where
 	/// [`.get()`]: Self::get
 	#[inline]
 	pub unsafe fn get_unchecked<'a, I>(&'a self, index: I) -> I::Immut
-	where I: BitSliceIndex<'a, T, O> {
+	where
+		I: BitSliceIndex<'a, T, O>,
+	{
 		index.get_unchecked(self)
 	}
 
@@ -520,7 +492,9 @@ where
 	/// [`.get_mut()`]: Self::get_mut
 	#[inline]
 	pub unsafe fn get_unchecked_mut<'a, I>(&'a mut self, index: I) -> I::Mut
-	where I: BitSliceIndex<'a, T, O> {
+	where
+		I: BitSliceIndex<'a, T, O>,
+	{
 		index.get_unchecked_mut(self)
 	}
 
@@ -597,7 +571,7 @@ where
 	/// ```
 	#[inline]
 	pub fn swap(&mut self, a: usize, b: usize) {
-		let bounds = 0 .. self.len();
+		let bounds = 0..self.len();
 		self.assert_in_bounds(a, bounds.clone());
 		self.assert_in_bounds(b, bounds);
 		unsafe {
@@ -663,7 +637,7 @@ where
 	/// [`.by_refs()`]: crate::slice::Iter::by_refs
 	/// [`.by_vals()`]: crate::slice::Iter::by_vals
 	#[inline]
-	pub fn iter(&self) -> Iter<T, O> {
+	pub fn iter(&self) -> Iter<'_, T, O> {
 		Iter::new(self)
 	}
 
@@ -703,7 +677,7 @@ where
 	///
 	/// [`.remove_alias()`]: crate::slice::IterMut::remove_alias
 	#[inline]
-	pub fn iter_mut(&mut self) -> IterMut<T, O> {
+	pub fn iter_mut(&mut self) -> IterMut<'_, T, O> {
 		IterMut::new(self)
 	}
 
@@ -735,7 +709,7 @@ where
 	/// assert!(iter.next().is_none());
 	/// ```
 	#[inline]
-	pub fn windows(&self, size: usize) -> Windows<T, O> {
+	pub fn windows(&self, size: usize) -> Windows<'_, T, O> {
 		Windows::new(self, size)
 	}
 
@@ -780,7 +754,7 @@ where
 	/// [`.chunks_mut()`]: Self::chunks_mut
 	/// [`.rchunks()`]: Self::rchunks
 	#[inline]
-	pub fn chunks(&self, chunk_size: usize) -> Chunks<T, O> {
+	pub fn chunks(&self, chunk_size: usize) -> Chunks<'_, T, O> {
 		Chunks::new(self, chunk_size)
 	}
 
@@ -831,7 +805,7 @@ where
 	/// [`.rchunks_mut()`]: Self::rchunks_mut
 	/// [`.remove_alias()`]: crate::slice::ChunksMut::remove_alias
 	#[inline]
-	pub fn chunks_mut(&mut self, chunk_size: usize) -> ChunksMut<T, O> {
+	pub fn chunks_mut(&mut self, chunk_size: usize) -> ChunksMut<'_, T, O> {
 		ChunksMut::new(self, chunk_size)
 	}
 
@@ -877,7 +851,7 @@ where
 	/// [`.rchunks_exact()`]: Self::rchunks_exact
 	/// [`.remainder()`]: crate::slice::ChunksExact::remainder
 	#[inline]
-	pub fn chunks_exact(&self, chunk_size: usize) -> ChunksExact<T, O> {
+	pub fn chunks_exact(&self, chunk_size: usize) -> ChunksExact<'_, T, O> {
 		ChunksExact::new(self, chunk_size)
 	}
 
@@ -938,7 +912,7 @@ where
 	pub fn chunks_exact_mut(
 		&mut self,
 		chunk_size: usize,
-	) -> ChunksExactMut<T, O> {
+	) -> ChunksExactMut<'_, T, O> {
 		ChunksExactMut::new(self, chunk_size)
 	}
 
@@ -984,7 +958,7 @@ where
 	/// [`.rchunks_exact()`]: Self::rchunks_exact
 	/// [`.rchunks_mut()`]: Self::rchunks_mut
 	#[inline]
-	pub fn rchunks(&self, chunk_size: usize) -> RChunks<T, O> {
+	pub fn rchunks(&self, chunk_size: usize) -> RChunks<'_, T, O> {
 		RChunks::new(self, chunk_size)
 	}
 
@@ -1035,7 +1009,7 @@ where
 	/// [`.rchunks_exact_mut()`]: Self::rchunks_exact_mut
 	/// [`.remove_alias()`]: crate::slice::RChunksMut::remove_alias
 	#[inline]
-	pub fn rchunks_mut(&mut self, chunk_size: usize) -> RChunksMut<T, O> {
+	pub fn rchunks_mut(&mut self, chunk_size: usize) -> RChunksMut<'_, T, O> {
 		RChunksMut::new(self, chunk_size)
 	}
 
@@ -1082,7 +1056,7 @@ where
 	/// [`.rchunks_exact_mut()`]: Self::rchunks_exact_mut
 	/// [`.remainder()`]: crate::slice::RChunksExact::remainder
 	#[inline]
-	pub fn rchunks_exact(&self, chunk_size: usize) -> RChunksExact<T, O> {
+	pub fn rchunks_exact(&self, chunk_size: usize) -> RChunksExact<'_, T, O> {
 		RChunksExact::new(self, chunk_size)
 	}
 
@@ -1140,7 +1114,7 @@ where
 	pub fn rchunks_exact_mut(
 		&mut self,
 		chunk_size: usize,
-	) -> RChunksExactMut<T, O> {
+	) -> RChunksExactMut<'_, T, O> {
 		RChunksExactMut::new(self, chunk_size)
 	}
 
@@ -1186,7 +1160,7 @@ where
 	/// ```
 	#[inline]
 	pub fn split_at(&self, mid: usize) -> (&Self, &Self) {
-		self.assert_in_bounds(mid, 0 ..= self.len());
+		self.assert_in_bounds(mid, 0..=self.len());
 		unsafe { self.split_at_unchecked(mid) }
 	}
 
@@ -1245,7 +1219,7 @@ where
 		&mut self,
 		mid: usize,
 	) -> (&mut BitSlice<T::Alias, O>, &mut BitSlice<T::Alias, O>) {
-		self.assert_in_bounds(mid, 0 ..= self.len());
+		self.assert_in_bounds(mid, 0..=self.len());
 		unsafe { self.split_at_unchecked_mut(mid) }
 	}
 
@@ -1324,8 +1298,10 @@ where
 	/// [`.split_inclusive()`]: Self::split_inclusive
 	/// [`.split_mut()`]: Self::split_mut
 	#[inline]
-	pub fn split<F>(&self, pred: F) -> Split<T, O, F>
-	where F: FnMut(usize, &bool) -> bool {
+	pub fn split<F>(&self, pred: F) -> Split<'_, T, O, F>
+	where
+		F: FnMut(usize, &bool) -> bool,
+	{
 		Split::new(self, pred)
 	}
 
@@ -1378,8 +1354,10 @@ where
 	/// [`.split_inclusive_mut()`]: Self::split_inclusive_mut
 	/// [`.splitn_mut()`]: Self::splitn_mut
 	#[inline]
-	pub fn split_mut<F>(&mut self, pred: F) -> SplitMut<T, O, F>
-	where F: FnMut(usize, &bool) -> bool {
+	pub fn split_mut<F>(&mut self, pred: F) -> SplitMut<'_, T, O, F>
+	where
+		F: FnMut(usize, &bool) -> bool,
+	{
 		SplitMut::new(self.alias_mut(), pred)
 	}
 
@@ -1421,8 +1399,10 @@ where
 	/// [`.split()`]: Self::split
 	/// [`.split_inclusive_mut()`]: Self::split_inclusive_mut
 	#[inline]
-	pub fn split_inclusive<F>(&self, pred: F) -> SplitInclusive<T, O, F>
-	where F: FnMut(usize, &bool) -> bool {
+	pub fn split_inclusive<F>(&self, pred: F) -> SplitInclusive<'_, T, O, F>
+	where
+		F: FnMut(usize, &bool) -> bool,
+	{
 		SplitInclusive::new(self, pred)
 	}
 
@@ -1474,7 +1454,7 @@ where
 	pub fn split_inclusive_mut<F>(
 		&mut self,
 		pred: F,
-	) -> SplitInclusiveMut<T, O, F>
+	) -> SplitInclusiveMut<'_, T, O, F>
 	where
 		F: FnMut(usize, &bool) -> bool,
 	{
@@ -1554,8 +1534,10 @@ where
 	/// [`.rsplit_mut()`]: Self::rsplit_mut
 	/// [`.split()`]: Self::split
 	#[inline]
-	pub fn rsplit<F>(&self, pred: F) -> RSplit<T, O, F>
-	where F: FnMut(usize, &bool) -> bool {
+	pub fn rsplit<F>(&self, pred: F) -> RSplit<'_, T, O, F>
+	where
+		F: FnMut(usize, &bool) -> bool,
+	{
 		RSplit::new(self, pred)
 	}
 
@@ -1606,8 +1588,10 @@ where
 	/// [`.rsplitn_mut()`]: Self::rsplitn_mut
 	/// [`.split_mut()`]: Self::split_mut
 	#[inline]
-	pub fn rsplit_mut<F>(&mut self, pred: F) -> RSplitMut<T, O, F>
-	where F: FnMut(usize, &bool) -> bool {
+	pub fn rsplit_mut<F>(&mut self, pred: F) -> RSplitMut<'_, T, O, F>
+	where
+		F: FnMut(usize, &bool) -> bool,
+	{
 		RSplitMut::new(self.alias_mut(), pred)
 	}
 
@@ -1651,8 +1635,10 @@ where
 	/// [`.split()`]: Self::split
 	/// [`.splitn_mut()`]: Self::splitn_mut
 	#[inline]
-	pub fn splitn<F>(&self, n: usize, pred: F) -> SplitN<T, O, F>
-	where F: FnMut(usize, &bool) -> bool {
+	pub fn splitn<F>(&self, n: usize, pred: F) -> SplitN<'_, T, O, F>
+	where
+		F: FnMut(usize, &bool) -> bool,
+	{
 		SplitN::new(self, pred, n)
 	}
 
@@ -1703,8 +1689,10 @@ where
 	/// [`.split_mut()`]: Self::split_mut
 	/// [`.splitn()`]: Self::splitn
 	#[inline]
-	pub fn splitn_mut<F>(&mut self, n: usize, pred: F) -> SplitNMut<T, O, F>
-	where F: FnMut(usize, &bool) -> bool {
+	pub fn splitn_mut<F>(&mut self, n: usize, pred: F) -> SplitNMut<'_, T, O, F>
+	where
+		F: FnMut(usize, &bool) -> bool,
+	{
 		SplitNMut::new(self.alias_mut(), pred, n)
 	}
 
@@ -1749,8 +1737,10 @@ where
 	/// [`.rsplitn_mut()`]: Self::rsplitn_mut
 	/// [`.splitn()`]: Self::splitn
 	#[inline]
-	pub fn rsplitn<F>(&self, n: usize, pred: F) -> RSplitN<T, O, F>
-	where F: FnMut(usize, &bool) -> bool {
+	pub fn rsplitn<F>(&self, n: usize, pred: F) -> RSplitN<'_, T, O, F>
+	where
+		F: FnMut(usize, &bool) -> bool,
+	{
 		RSplitN::new(self, pred, n)
 	}
 
@@ -1802,8 +1792,14 @@ where
 	/// [`.rsplit_mut()`]: Self::rsplit_mut
 	/// [`.splitn_mut()`]: Self::splitn_mut
 	#[inline]
-	pub fn rsplitn_mut<F>(&mut self, n: usize, pred: F) -> RSplitNMut<T, O, F>
-	where F: FnMut(usize, &bool) -> bool {
+	pub fn rsplitn_mut<F>(
+		&mut self,
+		n: usize,
+		pred: F,
+	) -> RSplitNMut<'_, T, O, F>
+	where
+		F: FnMut(usize, &bool) -> bool,
+	{
 		RSplitNMut::new(self.alias_mut(), pred, n)
 	}
 
@@ -1873,7 +1869,7 @@ where
 		T2: BitStore,
 		O2: BitOrder,
 	{
-		self.get(.. needle.len())
+		self.get(..needle.len())
 			.map(|slice| slice == needle)
 			.unwrap_or(false)
 	}
@@ -1914,7 +1910,7 @@ where
 		T2: BitStore,
 		O2: BitOrder,
 	{
-		self.get(self.len() - needle.len() ..)
+		self.get(self.len() - needle.len()..)
 			.map(|slice| slice == needle)
 			.unwrap_or(false)
 	}
@@ -1957,9 +1953,8 @@ where
 		O2: BitOrder,
 	{
 		if self.starts_with(prefix) {
-			self.get(prefix.len() ..)
-		}
-		else {
+			self.get(prefix.len()..)
+		} else {
 			None
 		}
 	}
@@ -2002,9 +1997,8 @@ where
 		O2: BitOrder,
 	{
 		if self.ends_with(suffix) {
-			self.get(.. self.len() - suffix.len())
-		}
-		else {
+			self.get(..self.len() - suffix.len())
+		} else {
 			None
 		}
 	}
@@ -2047,10 +2041,10 @@ where
 		while by > 0 {
 			let shamt = cmp::min(mem::bits_of::<usize>(), by);
 			unsafe {
-				let tmp_bits = tmp.get_unchecked_mut(.. shamt);
-				tmp_bits.clone_from_bitslice(self.get_unchecked(.. shamt));
-				self.copy_within_unchecked(shamt .., 0);
-				self.get_unchecked_mut(len - shamt ..)
+				let tmp_bits = tmp.get_unchecked_mut(..shamt);
+				tmp_bits.clone_from_bitslice(self.get_unchecked(..shamt));
+				self.copy_within_unchecked(shamt.., 0);
+				self.get_unchecked_mut(len - shamt..)
 					.clone_from_bitslice(tmp_bits);
 			}
 			by -= shamt;
@@ -2096,10 +2090,10 @@ where
 			let shamt = cmp::min(mem::bits_of::<usize>(), by);
 			let mid = len - shamt;
 			unsafe {
-				let tmp_bits = tmp.get_unchecked_mut(.. shamt);
-				tmp_bits.clone_from_bitslice(self.get_unchecked(mid ..));
-				self.copy_within_unchecked(.. mid, shamt);
-				self.get_unchecked_mut(.. shamt)
+				let tmp_bits = tmp.get_unchecked_mut(..shamt);
+				tmp_bits.clone_from_bitslice(self.get_unchecked(mid..));
+				self.copy_within_unchecked(..mid, shamt);
+				self.get_unchecked_mut(..shamt)
 					.clone_from_bitslice(tmp_bits);
 			}
 			by -= shamt;
@@ -2168,7 +2162,9 @@ where
 	/// ```
 	#[inline]
 	pub fn fill_with<F>(&mut self, mut func: F)
-	where F: FnMut(usize) -> bool {
+	where
+		F: FnMut(usize) -> bool,
+	{
 		for (idx, ptr) in self.as_mut_bitptr_range().enumerate() {
 			unsafe {
 				ptr.write(func(idx));
@@ -2226,13 +2222,15 @@ where
 	/// ```
 	#[inline]
 	pub fn copy_within<R>(&mut self, src: R, dest: usize)
-	where R: RangeExt<usize> {
+	where
+		R: RangeExt<usize>,
+	{
 		let len = self.len();
 		let src = src.normalize(0, len);
-		self.assert_in_bounds(src.start, 0 .. len);
-		self.assert_in_bounds(src.end, 0 ..= len);
-		self.assert_in_bounds(dest, 0 .. len);
-		self.assert_in_bounds(dest + src.len(), 0 ..= len);
+		self.assert_in_bounds(src.start, 0..len);
+		self.assert_in_bounds(src.end, 0..=len);
+		self.assert_in_bounds(dest, 0..len);
+		self.assert_in_bounds(dest + src.len(), 0..=len);
 		unsafe {
 			self.copy_within_unchecked(src, dest);
 		}
@@ -2292,7 +2290,9 @@ where
 	/// [layout]: https://ferrilab.github.io/bitvec/memory-layout.html
 	#[inline]
 	pub unsafe fn align_to<U>(&self) -> (&Self, &BitSlice<U, O>, &Self)
-	where U: BitStore {
+	where
+		U: BitStore,
+	{
 		let (l, c, r) = self.as_bitspan().align_to::<U>();
 		(
 			l.into_bitslice_ref(),
@@ -2346,7 +2346,9 @@ where
 	pub unsafe fn align_to_mut<U>(
 		&mut self,
 	) -> (&mut Self, &mut BitSlice<U, O>, &mut Self)
-	where U: BitStore {
+	where
+		U: BitStore,
+	{
 		let (l, c, r) = self.as_mut_bitspan().align_to::<U>();
 		(
 			l.into_bitslice_mut(),
@@ -2559,8 +2561,7 @@ where
 	fn get(self, bits: &'a BitSlice<T, O>) -> Option<Self::Immut> {
 		if self < bits.len() {
 			Some(unsafe { self.get_unchecked(bits) })
-		}
-		else {
+		} else {
 			None
 		}
 	}
@@ -2569,8 +2570,7 @@ where
 	fn get_mut(self, bits: &'a mut BitSlice<T, O>) -> Option<Self::Mut> {
 		if self < bits.len() {
 			Some(unsafe { self.get_unchecked_mut(bits) })
-		}
-		else {
+		} else {
 			None
 		}
 	}
@@ -2622,28 +2622,26 @@ macro_rules! range_impl {
 
 			#[inline]
 			#[allow(
-				clippy::blocks_in_if_conditions,
+				clippy::blocks_in_conditions,
 				clippy::redundant_closure_call
 			)]
 			fn get(self, bits: Self::Immut) -> Option<Self::Immut> {
 				if ($check)(self.clone(), bits.as_bitspan()) {
 					Some(unsafe { self.get_unchecked(bits) })
-				}
-				else {
+				} else {
 					None
 				}
 			}
 
 			#[inline]
 			#[allow(
-				clippy::blocks_in_if_conditions,
+				clippy::blocks_in_conditions,
 				clippy::redundant_closure_call
 			)]
 			fn get_mut(self, bits: Self::Mut) -> Option<Self::Mut> {
 				if ($check)(self.clone(), bits.as_bitspan()) {
 					Some(unsafe { self.get_unchecked_mut(bits) })
-				}
-				else {
+				} else {
 					None
 				}
 			}
