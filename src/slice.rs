@@ -1068,8 +1068,10 @@ where
 						.iter()
 						.map(BitStore::load_value)
 						.map(|elem| elem.count_ones() as usize)
-						.sum::<usize>() + tail
-					.map_or(0, |elem| elem.load_value().count_ones() as usize)
+						.sum::<usize>()
+					+ tail.map_or(0, |elem| {
+						elem.load_value().count_ones() as usize
+					})
 			},
 		}
 	}

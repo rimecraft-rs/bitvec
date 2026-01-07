@@ -2519,7 +2519,7 @@ where
 	///
 	/// [0]: core::slice::SliceIndex::get_unchecked_mut
 	unsafe fn get_unchecked_mut(self, bits: &'a mut BitSlice<T, O>)
-	-> Self::Mut;
+		-> Self::Mut;
 
 	/// Immutably indexes into a bit-slice, panicking if `self` is out of
 	/// bounds.
@@ -2593,7 +2593,7 @@ where
 	fn index(self, bits: &'a BitSlice<T, O>) -> Self::Immut {
 		match self.get(bits) {
 			Some(b) => b,
-			None => panic!("index {} out of bounds: {}", self, bits.len())
+			None => panic!("index {} out of bounds: {}", self, bits.len()),
 		}
 	}
 

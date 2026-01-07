@@ -6,17 +6,15 @@
 ########################################################################
 
 [toolchain]
-channel = "1.56.0"
-profile = "default"
-components = [
-	"clippy",
-	"rustfmt",
-	"rust-src",
-]
-# channel = "nightly"
+# channel = "1.56.0"
+# profile = "default"
 # components = [
-# 	"miri",
+# 	"clippy",
+# 	"rustfmt",
+# 	"rust-src",
 # ]
+channel = "nightly"
+components = ["miri"]
 
 # Additional tools available through Cargo:
 #

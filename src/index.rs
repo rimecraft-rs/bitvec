@@ -218,9 +218,9 @@ where R: BitRegister
 		self,
 		upto: BitEnd<R>,
 	) -> impl Iterator<Item = Self>
-	+ DoubleEndedIterator
-	+ ExactSizeIterator
-	+ FusedIterator {
+	       + DoubleEndedIterator
+	       + ExactSizeIterator
+	       + FusedIterator {
 		let (from, upto) = (self.into_inner(), upto.into_inner());
 		debug_assert!(from <= upto, "Ranges must run from low to high");
 		(from .. upto).map(|val| unsafe { Self::new_unchecked(val) })
@@ -229,9 +229,9 @@ where R: BitRegister
 	/// Iterates over all possible index values.
 	#[inline]
 	pub fn range_all() -> impl Iterator<Item = Self>
-	+ DoubleEndedIterator
-	+ ExactSizeIterator
-	+ FusedIterator {
+	       + DoubleEndedIterator
+	       + ExactSizeIterator
+	       + FusedIterator {
 		BitIdx::MIN.range(BitEnd::MAX)
 	}
 
@@ -509,9 +509,9 @@ where R: BitRegister
 	pub fn range_from(
 		from: BitIdx<R>,
 	) -> impl Iterator<Item = Self>
-	+ DoubleEndedIterator
-	+ ExactSizeIterator
-	+ FusedIterator {
+	       + DoubleEndedIterator
+	       + ExactSizeIterator
+	       + FusedIterator {
 		(from.idx ..= Self::MAX.end)
 			.map(|tail| unsafe { BitEnd::new_unchecked(tail) })
 	}
@@ -699,9 +699,9 @@ where R: BitRegister
 
 	/// Iterates over all possible position values.
 	pub(crate) fn range_all() -> impl Iterator<Item = Self>
-	+ DoubleEndedIterator
-	+ ExactSizeIterator
-	+ FusedIterator {
+	       + DoubleEndedIterator
+	       + ExactSizeIterator
+	       + FusedIterator {
 		BitIdx::<R>::range_all()
 			.map(|idx| unsafe { Self::new_unchecked(idx.into_inner()) })
 	}
@@ -809,9 +809,9 @@ where R: BitRegister
 	/// Iterates over all possible selector values.
 	#[inline]
 	pub fn range_all() -> impl Iterator<Item = Self>
-	+ DoubleEndedIterator
-	+ ExactSizeIterator
-	+ FusedIterator {
+	       + DoubleEndedIterator
+	       + ExactSizeIterator
+	       + FusedIterator {
 		BitPos::<R>::range_all().map(BitPos::select)
 	}
 }
