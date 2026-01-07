@@ -7,13 +7,7 @@ use core::cmp;
 use crate::{
 	index::BitIdx,
 	prelude::*,
-	ptr::{
-		self as bv_ptr,
-		AddressExt,
-		BitSpan,
-		BitSpanError,
-		Mut,
-	},
+	ptr::{self as bv_ptr, AddressExt, BitSpan, BitSpanError, Mut},
 };
 
 #[test]
@@ -23,13 +17,15 @@ fn free_functions() {
 
 	let one = BitPtr::<Mut, u8, Lsb0>::from_slice_mut(&mut a[..]);
 	let two = one.wrapping_add(8);
-	let three = BitPtr::<Mut, u16, Msb0>::from_mut(&mut b);
-	let four = three.wrapping_add(8);
 
 	unsafe {
 		bv_ptr::copy(two.to_const(), one, 8);
 	}
 	assert_eq!(a[0], !0);
+
+	let one = BitPtr::<Mut, u8, Lsb0>::from_slice_mut(&mut a);
+	let three = BitPtr::<Mut, u16, Msb0>::from_mut(&mut b);
+
 	unsafe {
 		bv_ptr::copy(three.to_const(), one, 8);
 	}
@@ -42,6 +38,9 @@ fn free_functions() {
 	}
 	assert_eq!(a[1], 0);
 	assert_eq!(b, !0);
+
+	let three = BitPtr::<Mut, u16, Msb0>::from_mut(&mut b);
+	let four = three.wrapping_add(8);
 
 	unsafe {
 		bv_ptr::write_bits(four, false, 8);

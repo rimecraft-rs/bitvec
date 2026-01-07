@@ -2,10 +2,8 @@
 
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
-use core::{
-	marker::PhantomData,
-	ops::RangeBounds,
-};
+use core::{marker::PhantomData, ops::RangeBounds};
+use std::cell::UnsafeCell;
 
 use funty::Integral;
 use tap::Pipe;
@@ -13,33 +11,17 @@ use tap::Pipe;
 use tap::Tap;
 use wyz::{
 	bidi::BidiIterator,
-	comu::{
-		Const,
-		Mut,
-	},
+	comu::{Const, Mut},
 	range::RangeExt,
 };
 
 #[cfg(feature = "alloc")]
 use crate::vec::BitVec;
 use crate::{
-	domain::{
-		BitDomain,
-		Domain,
-	},
+	domain::{BitDomain, Domain},
 	mem,
-	order::{
-		BitOrder,
-		Lsb0,
-		Msb0,
-	},
-	ptr::{
-		self as bv_ptr,
-		BitPtr,
-		BitPtrRange,
-		BitSpan,
-		BitSpanError,
-	},
+	order::{BitOrder, Lsb0, Msb0},
+	ptr::{self as bv_ptr, BitPtr, BitPtrRange, BitSpan, BitSpanError},
 	store::BitStore,
 };
 
@@ -50,10 +32,7 @@ mod specialization;
 mod tests;
 mod traits;
 
-pub use self::{
-	api::*,
-	iter::*,
-};
+pub use self::{api::*, iter::*};
 
 #[repr(transparent)]
 #[doc = include_str!("../doc/slice/BitSlice.md")]
@@ -82,7 +61,7 @@ where
 	///
 	/// See `ptr::span` for more information on the encoding scheme used in
 	/// references to `BitSlice`.
-	_mem: [()],
+	_mem: [UnsafeCell<()>],
 }
 
 /// Constructors.
@@ -289,8 +268,7 @@ where
 			elts.saturating_mul(mem::bits_of::<T::Mem>())
 				.pipe(BitSpanError::TooLong)
 				.pipe(Err)
-		}
-		else {
+		} else {
 			Ok(unsafe { Self::from_slice_unchecked(slice) })
 		}
 	}
@@ -378,8 +356,7 @@ where
 			elts.saturating_mul(mem::bits_of::<T::Mem>())
 				.pipe(BitSpanError::TooLong)
 				.pipe(Err)
-		}
-		else {
+		} else {
 			Ok(unsafe { Self::from_slice_unchecked_mut(slice) })
 		}
 	}
@@ -805,7 +782,7 @@ where
 	/// ```
 	#[inline]
 	pub fn replace(&mut self, index: usize, value: bool) -> bool {
-		self.assert_in_bounds(index, 0 .. self.len());
+		self.assert_in_bounds(index, 0..self.len());
 		unsafe { self.replace_unchecked(index, value) }
 	}
 
@@ -948,7 +925,9 @@ where
 	/// ```
 	#[inline]
 	pub unsafe fn copy_within_unchecked<R>(&mut self, src: R, dest: usize)
-	where R: RangeExt<usize> {
+	where
+		R: RangeExt<usize>,
+	{
 		if let Some(this) = self.coerce_mut::<T, Lsb0>() {
 			return this.sp_copy_within_unchecked(src, dest);
 		}
@@ -958,7 +937,7 @@ where
 		let source = src.normalize(0, self.len());
 		let source_len = source.len();
 		let rev = source.contains(&dest);
-		let dest = dest .. dest + source_len;
+		let dest = dest..dest + source_len;
 		for (from, to) in self
 			.get_unchecked(source)
 			.as_bitptr_range()
@@ -1490,8 +1469,8 @@ where
 		);
 
 		unsafe {
-			self.copy_within_unchecked(by .., 0);
-			self.get_unchecked_mut(len - by ..).fill(false);
+			self.copy_within_unchecked(by.., 0);
+			self.get_unchecked_mut(len - by..).fill(false);
 		}
 	}
 
@@ -1556,8 +1535,8 @@ where
 		);
 
 		unsafe {
-			self.copy_within_unchecked(.. len - by, by);
-			self.get_unchecked_mut(.. by).fill(false);
+			self.copy_within_unchecked(..len - by, by);
+			self.get_unchecked_mut(..by).fill(false);
 		}
 	}
 
@@ -1598,7 +1577,9 @@ where
 	///
 	/// This panics if `bounds` is outside `index`.
 	pub(crate) fn assert_in_bounds<R>(&self, index: usize, bounds: R)
-	where R: RangeExt<usize> {
+	where
+		R: RangeExt<usize>,
+	{
 		let bounds = bounds.normalize(0, self.len());
 		assert!(
 			bounds.contains(&index),
@@ -1690,7 +1671,7 @@ where
 	/// [`.set()`]: Self::set
 	#[inline]
 	pub fn set_aliased(&self, index: usize, value: bool) {
-		self.assert_in_bounds(index, 0 .. self.len());
+		self.assert_in_bounds(index, 0..self.len());
 		unsafe {
 			self.set_aliased_unchecked(index, value);
 		}

@@ -6,22 +6,13 @@ use core::{
 	cmp,
 	convert::TryFrom,
 	fmt::{
-		self,
-		Binary,
-		Debug,
-		Display,
-		Formatter,
-		LowerHex,
-		Octal,
-		Pointer,
+		self, Binary, Debug, Display, Formatter, LowerHex, Octal, Pointer,
 		UpperHex,
 	},
-	hash::{
-		Hash,
-		Hasher,
-	},
+	hash::{Hash, Hasher},
 	str,
 };
+use std::panic::RefUnwindSafe;
 
 use wyz::fmt::FmtForward;
 
@@ -31,11 +22,7 @@ use crate::vec::BitVec;
 use crate::{
 	domain::Domain,
 	mem,
-	order::{
-		BitOrder,
-		Lsb0,
-		Msb0,
-	},
+	order::{BitOrder, Lsb0, Msb0},
 	store::BitStore,
 	view::BitView,
 };
@@ -107,13 +94,11 @@ where
 			(self.coerce::<T1, Lsb0>(), rhs.coerce::<T1, Lsb0>())
 		{
 			this.sp_eq(that)
-		}
-		else if let (Some(this), Some(that)) =
+		} else if let (Some(this), Some(that)) =
 			(self.coerce::<T1, Msb0>(), rhs.coerce::<T1, Msb0>())
 		{
 			this.sp_eq(that)
-		}
-		else {
+		} else {
 			self.len() == rhs.len()
 				&& self
 					.iter()
@@ -410,8 +395,8 @@ where
 		val |= bit as u8;
 	}
 	match val {
-		v @ 0 ..= 9 => b'0' + v,
-		v @ 10 ..= 35 => alpha - 10 + v,
+		v @ 0..=9 => b'0' + v,
+		v @ 10..=35 => alpha - 10 + v,
 		_ => unreachable!(
 			"bit-slices wider than five bits cannot be rendered to ASCII b36"
 		),
@@ -450,7 +435,7 @@ where
 		*slot = bits_to_ascii(chunk, alpha);
 		skip += 1;
 	}
-	unsafe { str::from_utf8_unchecked(&into[.. skip]) }
+	unsafe { str::from_utf8_unchecked(&into[..skip]) }
 }
 
 /// Constructs the numeric formatting implementations.
@@ -536,9 +521,18 @@ where
 {
 	#[inline]
 	fn hash<H>(&self, hasher: &mut H)
-	where H: Hasher {
+	where
+		H: Hasher,
+	{
 		self.iter().by_vals().for_each(|bit| bit.hash(hasher));
 	}
+}
+
+impl<T, O> RefUnwindSafe for BitSlice<T, O>
+where
+	T: BitStore + RefUnwindSafe,
+	O: BitOrder,
+{
 }
 
 #[doc = include_str!("../../doc/slice/threadsafe.md")]
